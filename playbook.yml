@@ -1,0 +1,43 @@
+- hosts: all
+  vars:
+    user_name: api
+
+  tasks:
+  - name: Install Docker prerequisites
+    become: true
+    apt:
+      update_cache: true
+      name:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+
+  - name: Install Docker's GPG key
+    become: true
+    shell:
+      cmd: >-
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+        gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+  - name: Set up the Docker repository
+    become: true
+    shell:
+      cmd: >-
+        echo
+        "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
+        https://download.docker.com/linux/ubuntu
+        $(lsb_release -cs) stable" |
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+      creates: /etc/apt/sources.list.d/docker.list
+
+  - name: Install Docker
+    become: true
+    apt:
+      update_cache: true
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
