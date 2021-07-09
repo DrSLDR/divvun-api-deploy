@@ -41,3 +41,10 @@
         - docker-ce
         - docker-ce-cli
         - containerd.io
+
+  - name: Ensure Docker service is started and enabled
+    become: true
+    service:
+      name: docker.service
+      enabled: true
+      state: started
