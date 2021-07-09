@@ -48,3 +48,24 @@
       name: docker.service
       enabled: true
       state: started
+
+  - name: Create a Docker usergroup
+    become: true
+    group:
+      name: docker
+      state: present
+
+  - name: Create {{ user_name }} user
+    become: true
+    user:
+      name: "{{ user_name }}"
+      append: true
+      groups: docker
+
+  - name: Create distribution directory
+    become: true
+    file:
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+      state: directory
+      path: /home/{{ user_name }}/dist
