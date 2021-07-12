@@ -1,3 +1,4 @@
+---
 - hosts: all
   vars:
     user_name: api
