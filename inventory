@@ -1,0 +1,6 @@
+[api]
+1.2.3.4
+
+[api:vars]
+ansible_user_name="admin"
+host_name=api.example.com
