@@ -41,7 +41,14 @@
       name:
         - docker-ce
         - docker-ce-cli
-        - containerd.io
+        - containerd.io=1.4.4-1
+
+  - name: Pin the version of containerd.io
+    become: true
+    copy:
+      src: pinfile
+      dest: /etc/apt/preferences.d/pin-containerd
+      mode: 0744
 
   - name: Install docker-compose
     become: true
