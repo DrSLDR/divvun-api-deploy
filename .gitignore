@@ -17,3 +17,8 @@
 .ionide
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,ansible
+
+divvun-gramcheck-web
+divvun-api
+dist
+dist.tar.gz
