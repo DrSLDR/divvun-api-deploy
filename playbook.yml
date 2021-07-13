@@ -68,5 +68,20 @@
     file:
       owner: "{{ user_name }}"
       group: "{{ user_name }}"
+      mode: 0755
       state: directory
       path: /home/{{ user_name }}/dist
+
+  - name: Ensure the distribution archive is ready
+    file:
+      path: dist.tar.gz
+      state: file
+    delegate_to: localhost
+
+  - name: Deploy the dist
+    become: true
+    unarchive:
+      src: dist.tar.gz
+      dest: /home/{{ user_name }}/dist
+      owner: "{{ user_name }}"
+      creates: /home/{{ user_name }}/dist/divvun-api.tar.gz
