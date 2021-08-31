@@ -12,3 +12,13 @@ Controller (local machine):
 Server (remote machine):
 - Ubuntu 20.04 LTS
 - A (non-root) user with sudo rights
+
+## Usage
+
+First, run the `build_dist.sh` script. This compiles and prepares the docker image that
+will be deployed.
+
+Once that has run its course, run the Ansible playbook `playbook.yml`, of course after
+editing the `inventory` to match your setup. Please note that the server **must** have a
+resolvable DNS address, or the docker image will fail to start (Caddy requires a DNS
+address to get Let's Encrypt certificates and will not start without them).
