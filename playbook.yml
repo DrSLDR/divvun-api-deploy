@@ -85,3 +85,41 @@
       dest: /home/{{ user_name }}/dist
       owner: "{{ user_name }}"
       creates: /home/{{ user_name }}/dist/divvun-api.tar.gz
+
+  - name: Install the dist
+    become: true
+    args:
+      executable: /bin/bash
+    shell: |
+      set -euxo pipefail
+      echo $PWD
+      cd /home/{{ user_name }}/dist
+      gunzip -c divvun-api.tar.gz | docker image load
+      mkdir -p data/grammar
+      mkdir -p data/spelling
+      mkdir -p data/hyphenation
+      chown -R {{ user_name }}:{{ user_name }} .
+
+  - name: Create Caddyfile
+    become: true
+    template:
+      src: Caddyfile.j2
+      dest: /home/{{ user_name }}/dist/Caddyfile
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+      mode: 0644
+
+  - name: Create SystemD service
+    become: true
+    template:
+      src: divvun-api.service.j2
+      dest: /etc/systemd/system/divvun-api.service
+      mode: 0644
+
+  - name: Restart service
+    become: true
+    systemd:
+      name: divvun-api
+      daemon_reload: yes
+      state: restarted
+      enabled: yes
