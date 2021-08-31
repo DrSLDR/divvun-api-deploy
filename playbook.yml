@@ -1,0 +1,153 @@
+---
+- hosts: all
+  vars:
+    user_name: api
+
+  tasks:
+  - name: Install Docker prerequisites
+    become: true
+    apt:
+      update_cache: true
+      name:
+        - apt-transport-https
+        - ca-certificates
+        - curl
+        - gnupg
+        - lsb-release
+
+  - name: Install Docker's GPG key
+    become: true
+    shell:
+      cmd: >-
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg |
+        gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      creates: /usr/share/keyrings/docker-archive-keyring.gpg
+
+  - name: Set up the Docker repository
+    become: true
+    shell:
+      cmd: >-
+        echo
+        "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg]
+        https://download.docker.com/linux/ubuntu
+        $(lsb_release -cs) stable" |
+        tee /etc/apt/sources.list.d/docker.list > /dev/null
+      creates: /etc/apt/sources.list.d/docker.list
+
+  - name: Install Docker
+    become: true
+    apt:
+      update_cache: true
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io=1.4.4-1
+
+  - name: Pin the version of containerd.io
+    become: true
+    copy:
+      src: pinfile
+      dest: /etc/apt/preferences.d/pin-containerd
+      mode: 0744
+
+  - name: Install docker-compose
+    become: true
+    shell:
+      cmd: >-
+        curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)"
+        -o /usr/local/bin/docker-compose
+      creates: /usr/local/bin/docker-compose
+
+  - name: Make docker-compose executable
+    become: true
+    file:
+      path: /usr/local/bin/docker-compose
+      mode: "+x"
+
+  - name: Link docker-compose into /usr/bin
+    become: true
+    file:
+      path: /usr/bin/docker-compose
+      src: /usr/local/bin/docker-compose
+      state: link
+
+  - name: Ensure Docker service is started and enabled
+    become: true
+    service:
+      name: docker.service
+      enabled: true
+      state: started
+
+  - name: Create a Docker usergroup
+    become: true
+    group:
+      name: docker
+      state: present
+
+  - name: Create {{ user_name }} user
+    become: true
+    user:
+      name: "{{ user_name }}"
+      append: true
+      groups: docker
+
+  - name: Create distribution directory
+    become: true
+    file:
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+      mode: 0755
+      state: directory
+      path: /home/{{ user_name }}/dist
+
+  - name: Ensure the distribution archive is ready
+    file:
+      path: dist.tar.gz
+      state: file
+    delegate_to: localhost
+
+  - name: Deploy the dist
+    become: true
+    unarchive:
+      src: dist.tar.gz
+      dest: /home/{{ user_name }}/dist
+      owner: "{{ user_name }}"
+      creates: /home/{{ user_name }}/dist/divvun-api.tar.gz
+
+  - name: Install the dist
+    become: true
+    args:
+      executable: /bin/bash
+    shell: |
+      set -euxo pipefail
+      echo $PWD
+      cd /home/{{ user_name }}/dist
+      gunzip -c divvun-api.tar.gz | docker image load
+      mkdir -p data/grammar
+      mkdir -p data/spelling
+      mkdir -p data/hyphenation
+      chown -R {{ user_name }}:{{ user_name }} .
+
+  - name: Create Caddyfile
+    become: true
+    template:
+      src: Caddyfile.j2
+      dest: /home/{{ user_name }}/dist/Caddyfile
+      owner: "{{ user_name }}"
+      group: "{{ user_name }}"
+      mode: 0644
+
+  - name: Create SystemD service
+    become: true
+    template:
+      src: divvun-api.service.j2
+      dest: /etc/systemd/system/divvun-api.service
+      mode: 0644
+
+  - name: Restart service
+    become: true
+    systemd:
+      name: divvun-api
+      daemon_reload: yes
+      state: restarted
+      enabled: yes
