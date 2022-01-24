@@ -42,6 +42,7 @@
         - docker-ce
         - docker-ce-cli
         - containerd.io=1.4.4-1
+        - haveged
 
   - name: Pin the version of containerd.io
     become: true
