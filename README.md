@@ -5,6 +5,7 @@ match the new API server.
 
 ## Requirements
 Controller (local machine):
+- If using a Mac, it must have an Intel processor. **M1 Macs are not supported yet.**
 - Python 3.x with Ansible (Built on Python 3.8.10, Ansible 2.11; YMMV on other versions)
 - Docker
 - Node.js (`npm`, specifically)
