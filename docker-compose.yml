@@ -2,10 +2,12 @@ version: "3.7"
 services:
   divvun_api:
     image: divvun/divvun-api
+    restart: unless-stopped
     volumes:
       - ./data:/app/data
   caddy:
     image: abiosoft/caddy
+    restart: unless-stopped
     volumes:
       - ./Caddyfile:/etc/Caddyfile
       - ./.caddy:/root/.caddy
