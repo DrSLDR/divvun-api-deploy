@@ -146,20 +146,13 @@
 
   - name: Install language update scripts
     become: true
-    tasks:
-      - name: Copy scripts folder
-        copy:
-          src: scripts/
-          dest: /home/{{ user_name }}/dist
-          recurse: true
-      - name: Make scripts executable
-        file:
-          path: /home/{{ user_name }}/dist/scripts/
-          mode: "+x"
-        with_fileglob:
-          - /home/{{ user_name }}/dist/scripts/*.sh
+    copy:
+      src: scripts/
+      dest: /home/{{ user_name }}/dist/scripts/
+      mode: "+x"
 
   - name: Download language files
     become: true
-    script: /home/{{ user_name }}/dist/scripts/update_data.sh
-    
+    shell:
+      chdir: /home/{{ user_name }}/dist/scripts
+      cmd: "./update_data.sh"
