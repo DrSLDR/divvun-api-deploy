@@ -161,3 +161,4 @@
       name: "Update language files"
       job: "cd /home/{{ user_name }}/dist/scripts && ./update_data.sh"
       hour: "3"
+      minute: "0"
