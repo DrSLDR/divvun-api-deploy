@@ -154,7 +154,9 @@
     become: true
     shell:
       chdir: /home/{{ user_name }}/dist/scripts
-      cmd: "./update_data.sh"
+      # create a file after initial language file download so we don't do it again on subsequent runs
+      cmd: "./update_data.sh && touch /home/{{ user_name }}/dist/.ansible-langs-downloaded"
+      creates: /home/{{ user_name }}/dist/.ansible-langs-downloaded # don't re-download lang files if this file exists
 
   - name: Create cron job to update language files nightly
     cron:
