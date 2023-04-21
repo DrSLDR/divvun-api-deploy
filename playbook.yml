@@ -156,3 +156,9 @@
     shell:
       chdir: /home/{{ user_name }}/dist/scripts
       cmd: "./update_data.sh"
+
+  - name: Create cron job to update language files nightly
+    cron:
+      name: "Update language files"
+      job: "cd /home/{{ user_name }}/dist/scripts && ./update_data.sh"
+      hour: "3"
