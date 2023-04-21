@@ -113,7 +113,6 @@
       src: dist.tar.gz
       dest: /home/{{ user_name }}/dist
       owner: "{{ user_name }}"
-      creates: /home/{{ user_name }}/dist/divvun-api.tar.gz
 
   - name: Install the dist
     become: true
