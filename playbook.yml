@@ -2,6 +2,7 @@
 - hosts: all
   vars:
     user_name: api
+    pahkat_repo: pahkat_repo
 
   tasks:
   - name: Install Docker prerequisites
@@ -143,20 +144,38 @@
       cmd: "docker-compose up -d --remove-orphans"
       chdir: /home/{{ user_name }}/dist
 
-  - name: Install language update scripts
+  - name: Install Pahkat
     become: true
-    copy:
-      src: scripts/
-      dest: /home/{{ user_name }}/dist/scripts/
-      mode: "+x"
+    args:
+      executable: /bin/bash
+    shell: |
+      set -euxo pipefail
+      cd /home/{{ user_name }}/dist
+      PAHKAT_ARCHIVE=pahkat-prefix-cli_2.1.1_linux_x86_64.txz
+      wget -O "$PAHKAT_ARCHIVE" https://divvun.ams3.cdn.digitaloceanspaces.com/pahkat/artifacts/"$PAHKAT_ARCHIVE" 
+      tar xvf "$PAHKAT_ARCHIVE"
+      mv bin/pahkat-prefix .
+      rm -r bin
 
-  - name: Download language files
+  - name: Setup Pahkat
     become: true
-    shell:
-      chdir: /home/{{ user_name }}/dist/scripts
-      # create a file after initial language file download so we don't do it again on subsequent runs
-      cmd: "./update_data.sh && touch /home/{{ user_name }}/dist/.ansible-langs-downloaded"
-      creates: /home/{{ user_name }}/dist/.ansible-langs-downloaded # don't re-download lang files if this file exists
+    args:
+      executable: /bin/bash
+    shell: |
+      set -euxo pipefail
+      cd /home/{{ user_name }}/dist
+      ./pahkat-prefix init -c {{ pahkat_repo }}
+      ./pahkat-prefix config repo add https://pahkat.uit.no/main -c {{ pahkat_repo }}
+
+  - name: Install language files via Pahkat
+    become: true
+    args:
+      executable: /bin/bash
+    shell: |
+      set -euxo pipefail
+      cd /home/{{ user_name }}/dist
+      ./pahkat-prefix download speller-sme -c {{ pahkat_repo }} # WIP: this needs re-working when pahkat supports downloading .zhfst files directly
+
 
   - name: Create cron job to update language files nightly
     cron:
